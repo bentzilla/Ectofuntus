@@ -69,6 +69,35 @@ const
   // Script
     SCRIPT_VER   = 0.01;
     MOUSE_SPEED  = 11;
+  // Bone ID's
+    ID_Bone      = 526;
+    ID_BoneC     = 4255
+    ID_BigBone   = 532;
+    ID_BigBoneC  = 4257;
+  // Equipment ID's
+    ID_Ectophial = 4251;
+    ID_RingOfKin = 15707;
+    ID_Bucket    = 1925;
+    ID_BucketS   = 4286;
+    ID_Pot       = 1931;
+    ID_Token     = 4278;
+  // Ectofuntus ID's
+    ID_Ecto      = 5282;
+    ID_Bin       = 11164;
+    ID_Grinder   = 11163;
+    ID_Hopper    = 11162;
+    ID_UpStair   = 37454;
+    ID_DownStair = 5281;
+    ID_TrapDoorC = 5267;
+    ID_TrapDoorO = 5268;
+    ID_Ladder    = 5264;
+    ID_Shortcut  = 0;
+    ID_StairDown = 5263;
+    ID_StairUp   = 5262;
+    ID_Slime     = 17119;
+  // NPC ID's
+    ID_Disciple  = 1686;
+    ID_FremBank  = 9710;
 
 {*******************************************************************************
                             End Constants and Vars
