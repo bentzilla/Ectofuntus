@@ -1,0 +1,156 @@
+program Ectofuntus;
+{$DEFINE SMART}
+{$I SRL\SRL.scar}
+{$I Reflection\Reflection.simba}
+{$I SRL\SRL\Misc\PaintSMART.scar}
+{$I Reflection1\Core\RefPaint.simba}
+
+{******************************************************************************)
+                                  Setup Here
+*******************************************************************************}
+
+procedure SetupSmart;
+begin
+  Smart_Server      := 152;
+  Smart_Members     := False;
+  Smart_Signed      := True;
+  Smart_SuperDetail := False;
+end;
+
+procedure DeclarePlayers;
+begin
+  HowManyPlayers := 1;
+  NumberOfPlayers(HowManyPlayers);
+  CurrentPlayer := 0;
+
+  with Players[0] do
+  begin
+    Name        := '';
+    Pass        := '';
+    Nick        := '';
+    BoxRewards  := ['Lamp', 'Coins'];           // Box Reward
+    LampSkill   := 'Prayer';                    // Skill to advance with Lamp Reward
+    Active      := True;                        // Active ?
+  end;
+
+{  with Players[0] do
+  begin
+    Name        := 'Username';
+    Pass        := 'Password';
+    Nick        := '3 - 4 Letters of Username';
+    BoxRewards  := ['Lamp', 'Coins'];           // Box Reward
+    LampSkill   := 'Prayer';                    // Skill to advance with Lamp Reward
+    Active      := True;                        // Active ?
+  end;
+}
+  {
+  with Players[1] do
+  begin
+    Name        := 'Username';
+    Pass        := 'Password';
+    Nick        := '3 - 4 Letters of Username';
+    BoxRewards  := ['Lamp', 'Coins'];           // Box Reward
+    LampSkill   := 'Prayer';                    // Skill to advance with Lamp Reward
+    Active      := True;                        // Active ?
+  end;
+  }
+
+end;
+
+{******************************************************************************)
+                                  End Setup
+*******************************************************************************}
+
+{*******************************************************************************
+                              Constants and Vars
+*******************************************************************************}
+
+const
+  // Script
+    SCRIPT_VER   = 0.01;
+    MOUSE_SPEED  = 11;
+
+{*******************************************************************************
+                            End Constants and Vars
+*******************************************************************************}
+
+{*******************************************************************************
+                                   Script
+*******************************************************************************}
+
+{*******************************************************************************
+procedure ScriptTerminate;
+Description: Last things to execute when script has finished or terminated.
+*******************************************************************************}
+procedure ScriptTerminate;
+begin
+  // Progress Report
+  //if LoggedIn then
+    //LogOut;
+end;
+
+{*******************************************************************************
+procedure SetupRS;
+Description: Configures RS for Current Player.
+*******************************************************************************}
+procedure SetupRS;
+begin
+  if not LoggedIn then
+    LoginPlayer;
+  Wait(1500 + Random(30));
+  SetAngle(True);
+  MakeCompass('N');
+  SetRun(True);
+end;
+
+{*******************************************************************************
+function R_LoadPath(Path: Integer): TPointArray;
+Description: [REF] Loads Reflection Path
+*******************************************************************************}
+function R_LoadPath(Path: Integer): TPointArray;
+begin
+  case Path of
+    0:  Result := [];
+  end;
+end;
+
+{*******************************************************************************
+function R_WalkTo(Path: Integer): Boolean;
+Description: [REF] Walk to ...
+*******************************************************************************}
+function R_WalkTo(Path: Integer): Boolean;
+begin
+  SetAngle(True);
+  MakeCompass('n');
+  SetRun(True);
+  if (R_WalkPath(R_LoadPath(Path))) then
+    Result := True;
+end;
+
+{*******************************************************************************
+                                  End Script
+*******************************************************************************}
+
+{*******************************************************************************
+procedure MainLoop;
+Description: The Main Loop :)
+*******************************************************************************}
+procedure MainLoop;
+begin
+  SetupRS;
+
+  R_Debug(IntToStr(R_GetMyPos.x) + ', ' + IntToStr(R_GetMyPos.y), '');
+end;
+
+begin
+  AddOnTerminate('ScriptTerminate');
+  SetupSmart;
+  SetupSRL;
+  R_UpdateHooks;
+  MouseSpeed := MOUSE_SPEED;
+  DeclarePlayers;
+
+  //repeat
+    MainLoop;
+  //until(AllPlayersInActive);
+end.
