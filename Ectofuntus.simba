@@ -23,16 +23,6 @@ begin
   NumberOfPlayers(HowManyPlayers);
   CurrentPlayer := 0;
 
-  with Players[0] do
-  begin
-    Name        := '';
-    Pass        := '';
-    Nick        := '';
-    BoxRewards  := ['Lamp', 'Coins'];           // Box Reward
-    LampSkill   := 'Prayer';                    // Skill to advance with Lamp Reward
-    Active      := True;                        // Active ?
-  end;
-
 {  with Players[0] do
   begin
     Name        := 'Username';
@@ -67,37 +57,39 @@ end;
 
 const
   // Script
-    SCRIPT_VER   = 0.01;
-    MOUSE_SPEED  = 11;
+    SCRIPT_VER    = 0.01;
+    MOUSE_SPEED   = 11;
   // Bone ID's
-    ID_Bone      = 526;
-    ID_BoneC     = 4255
-    ID_BigBone   = 532;
-    ID_BigBoneC  = 4257;
+    ID_Bone       = 526;
+    ID_BoneC      = 4255;
+    ID_BigBone    = 532;
+    ID_BigBoneC   = 4257;
   // Equipment ID's
-    ID_Ectophial = 4251;
-    ID_RingOfKin = 15707;
-    ID_Bucket    = 1925;
-    ID_BucketS   = 4286;
-    ID_Pot       = 1931;
-    ID_Token     = 4278;
+    ID_Ectophial  = 4251;
+    ID_RingOfKin  = 15707;
+    ID_Bucket     = 1925;
+    ID_BucketS    = 4286;
+    ID_Pot        = 1931;
+    ID_Token      = 4278;
   // Ectofuntus ID's
-    ID_Ecto      = 5282;
-    ID_Bin       = 11164;
-    ID_Grinder   = 11163;
-    ID_Hopper    = 11162;
-    ID_UpStair   = 37454;
-    ID_DownStair = 5281;
-    ID_TrapDoorC = 5267;
-    ID_TrapDoorO = 5268;
-    ID_Ladder    = 5264;
-    ID_Shortcut  = 0;
-    ID_StairDown = 5263;
-    ID_StairUp   = 5262;
-    ID_Slime     = 17119;
+    ID_Ecto       = 5282;
+    ID_Bin        = 11164;
+    ID_Grinder    = 11163;
+    ID_Hopper     = 11162;
+    ID_StairUpF1  = 37454;
+    ID_StairDF1   = 5281;
+    ID_TrapDoorC  = 5267;
+    ID_TrapDoorO  = 5268;
+    ID_Ladder     = 5264;
+    ID_Shortcut   = 0;    // Get This
+    ID_StairDFB   = 5263;
+    ID_StairUpFB  = 5262;
+    ID_Slime      = 17119;
   // NPC ID's
-    ID_Disciple  = 1686;
-    ID_FremBank  = 9710;
+    ID_Disciple   = 1686;
+    ID_FremBank   = 9710;
+  // Paths
+    PATH_FremBank = 0;
 
 {*******************************************************************************
                             End Constants and Vars
@@ -106,6 +98,145 @@ const
 {*******************************************************************************
                                    Script
 *******************************************************************************}
+
+{*******************************************************************************
+function Time: String;
+Description: Returns Current Time
+*******************************************************************************}
+function Time: String;
+var
+  H, M, S, MS: Word;
+begin
+  DecodeTime(Now, H, M, S, MS);
+  Result := (Padz(IntToStr(H), 2) + ':' + Padz(IntToStr(M), 2) + ':' + Padz(IntToStr(S), 2));
+end;
+
+{*******************************************************************************
+procedure Debug(s: String);
+Description: Writes debug message with current time
+*******************************************************************************}
+procedure Debug(s: String; Terminate: Boolean);
+begin
+  Writeln('[' + Time + ']: ' + s);
+  if Terminate then
+  begin
+    Writeln(Time + ' Terminating Script');
+    TerminateScript;
+  end;
+end;
+
+{*******************************************************************************
+function R_LoadPath(Path: Integer): TPointArray;
+Description: [REF] Loads Reflection Path.
+*******************************************************************************}
+function R_LoadPath(Path: Integer): TPointArray;
+begin
+  case Path of
+    PATH_FremBank:  Result := [Point(3448, 3698), Point(3448, 3703), Point(3448, 3707),
+                               Point(3448, 3712), Point(3450, 3716), Point(3451, 3721)];
+  end;
+end;
+
+{*******************************************************************************
+function R_WalkTo(Path: Integer): Boolean;
+Description: [REF] Walk to ...
+*******************************************************************************}
+function R_WalkTo(Path: Integer): Boolean;
+begin
+  SetAngle(True);
+  MakeCompass('n');
+  SetRun(True);
+  if (R_WalkPath(R_LoadPath(Path))) then
+    Result := True;
+end;
+
+{*******************************************************************************
+function R_OpenBankFrem: Boolean;
+Description: [REF] Opens the Bank
+*******************************************************************************}
+function R_OpenBankFrem: Boolean;
+var
+  NPC: TNPC;
+  TP: TPoint;
+begin
+  NPC := R_GetNPC(ID_FremBank, False);
+  if NPC = NULL_NPC then
+  begin
+    Debug('Null NPC in R_BankFrem', False);
+    Exit;
+  end;
+  TP := R_TileToMS(NPC.Tile, 1);
+  Mouse(TP.x, TP.y, 2, 2, False);
+  Wait(500 + Random(25));
+  R_ChooseOption('Bank Frem');
+  Wait(800 + Random(400));
+  if R_PinScreen then
+    if not InPin(Players[CurrentPlayer].Pin) then
+      Debug('Could not enter Pin', True);
+  Result := R_BankScreen;
+end;
+
+{*******************************************************************************
+function R_UseBankFrem(BoneID: Integer): Boolean;
+Description: [REF] Uses the bank
+*******************************************************************************}
+function R_UseBankFrem(BoneID: Integer): Boolean;
+var
+  NPC: TNPC;
+  TP: TPoint;
+begin
+  if not R_OpenBankFrem then
+    Exit;
+  R_DepositAllBy(ID_Token);
+  Wait(250 + Random(250));
+  R_WithdrawItem(BoneID, True);
+  R_CloseBank;
+  Result := not R_BankScreen;
+end;
+
+
+{*******************************************************************************
+function R_UseRing: Boolean;
+Description: [REF] Teleports using ring
+*******************************************************************************}
+function R_UseRing: Boolean;
+begin
+  R_GameTab(RTAB_EQUIPMENT);
+  R_ClickInterface(R_GetInterfaceChild(INTERFACE_EQUIPMENT, EQUIPMENT_RING), 2);
+  Wait(250 + Random(25));
+  Result := R_ChooseOption('elep');
+end;
+
+{*******************************************************************************
+function R_UseEctophial: Boolean;
+Description: [REF] Teleports using ectophial
+*******************************************************************************}
+function R_UseEctophial: Boolean;
+begin
+  R_GameTab(RTAB_INVENTORY);
+  Result := R_ClickItemBy(ID_Ectophial, 'mpty');
+end;
+
+{*******************************************************************************
+function R_CheckSetup: Boolean;
+Description: [REF] Results True if all is good.
+*******************************************************************************}
+function R_CheckSetup: Boolean;
+var
+  Item: TInvItem;
+begin
+  R_GameTab(RTAB_EQUIPMENT);
+  if (not (R_IsEquipped(ID_RingOfKin))) then
+    Debug('Ring of Kinship is not equipped', True);
+  if (not (R_ItemExists(ID_Ectophial, Item))) then
+    Debug('Ectophial is not in Inventory', True);
+  if (not (R_CountItem(ID_Bucket) = 9)) then
+    Debug('Please have 9 buckets in Inventory', True);
+  if (not (R_CountItem(ID_Pot) = 9)) then
+    Debug('Please have 9 pots in Inventory', True);
+  Result := True;
+end;
+
 
 {*******************************************************************************
 procedure ScriptTerminate;
@@ -133,30 +264,6 @@ begin
 end;
 
 {*******************************************************************************
-function R_LoadPath(Path: Integer): TPointArray;
-Description: [REF] Loads Reflection Path
-*******************************************************************************}
-function R_LoadPath(Path: Integer): TPointArray;
-begin
-  case Path of
-    0:  Result := [];
-  end;
-end;
-
-{*******************************************************************************
-function R_WalkTo(Path: Integer): Boolean;
-Description: [REF] Walk to ...
-*******************************************************************************}
-function R_WalkTo(Path: Integer): Boolean;
-begin
-  SetAngle(True);
-  MakeCompass('n');
-  SetRun(True);
-  if (R_WalkPath(R_LoadPath(Path))) then
-    Result := True;
-end;
-
-{*******************************************************************************
                                   End Script
 *******************************************************************************}
 
@@ -168,7 +275,9 @@ procedure MainLoop;
 begin
   SetupRS;
 
-  R_Debug(IntToStr(R_GetMyPos.x) + ', ' + IntToStr(R_GetMyPos.y), '');
+  Debug(IntToStr(R_GetMyPos.x) + ', ' + IntToStr(R_GetMyPos.y), False);
+
+  R_WalkTo(PATH_FremBank);
 end;
 
 begin
