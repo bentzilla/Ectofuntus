@@ -9,6 +9,8 @@ program Ectofuntus;
 {******************************************************************************)
                                   Setup Here
 *******************************************************************************}
+const
+  MOUSE_SPEED    = 11;
 
 procedure SetupSmart;
 begin
@@ -24,7 +26,7 @@ begin
   NumberOfPlayers(HowManyPlayers);
   CurrentPlayer := 0;
 
-{  with Players[0] do
+  with Players[0] do
   begin
     Name        := 'Username';
     Pass        := 'Password';
@@ -32,8 +34,10 @@ begin
     BoxRewards  := ['Lamp', 'Coins'];           // Box Reward
     LampSkill   := 'Prayer';                    // Skill to advance with Lamp Reward
     Active      := True;                        // Active ?
+    Integers[0] := 526;                         // Bone ID - List is below
+    Integers[1] := 18;                          // Number of bones to use
   end;
-}
+
   {
   with Players[1] do
   begin
@@ -43,6 +47,8 @@ begin
     BoxRewards  := ['Lamp', 'Coins'];           // Box Reward
     LampSkill   := 'Prayer';                    // Skill to advance with Lamp Reward
     Active      := True;                        // Active ?
+    Integers[0] := 526;                         // Bone ID - List is below
+    Integers[1] := 18;                          // Number of bones to use
   end;
   }
 
@@ -57,46 +63,64 @@ end;
 *******************************************************************************}
 
 const
+  // * - To Be Implemented \\
   // Script
-    SCRIPT_VER    = 0.01;
-    MOUSE_SPEED   = 11;
+    SCRIPT_VER      = 0.01;
   // Bone ID's
-    ID_Bone       = 526;
-    ID_BoneC      = 4255;
-    ID_BigBone    = 532;
-    ID_BigBoneC   = 4257;
-    // Finish List
+    ID_AccursedAsh  = 20266; //*
+    ID_Bone         = 526;
+    ID_BoneC        = 4255;
+    ID_BigBone      = 532;
+    ID_BigBoneC     = 4257;
+    ID_BabyBone     = 534;
+    ID_BabyBoneC    = 4260;
+    ID_WyvernBone   = 6812 ;
+    ID_WyvernBoneC  = 6810;
+    ID_InfernalAsh  = 20268; //*
+    ID_DragonBone   = 536;
+    ID_DragonBoneC  = 4261;
+    ID_OurgBone     = 14793;
+    ID_OurgBoneC    = 4855;
+    ID_FrostDBone   = 18832;
+    ID_FrostDBoneC  = 18834;
   // Equipment ID's
-    ID_Ectophial  = 4251;
-    ID_RingOfKin  = 15707;
-    ID_Bucket     = 1925;
-    ID_BucketS    = 4286;
-    ID_Pot        = 1931;
-    ID_Token      = 4278;
+    ID_Ectophial    = 4251;
+    ID_RingOfKin    = 15707;
+    ID_Bucket       = 1925;
+    ID_BucketS      = 4286;
+    ID_Pot          = 1931;
+    ID_Token        = 4278;
   // Ectofuntus ID's
-    ID_Ecto       = 5282;
-    ID_Bin        = 11164;
-    ID_Grinder    = 11163;
-    ID_Hopper     = 11162;
-    ID_StairUF1   = 37454;
-    ID_StairDF1   = 5281;
-    ID_TrapDoorC  = 5267;
-    ID_TrapDoorO  = 5268;
-    ID_Ladder     = 5264;
-    ID_Shortcut   = 17030; //?
-    ID_StairDFB   = 5263;
-    ID_StairUFB   = 5262;
-    ID_Slime      = 17119;
+    ID_Ecto         = 5282;
+    ID_Bin          = 11164;
+    ID_Grinder      = 11163;
+    ID_Hopper       = 11162;
+    ID_StairUF1     = 37454;
+    ID_StairDF1     = 5281;
+    ID_TrapDoorC    = 5267;
+    ID_TrapDoorO    = 5268;
+    ID_Ladder       = 5264;
+    ID_Shortcut     = 17030; //*
+    ID_StairDFB     = 5263;
+    ID_StairUFB     = 5262;
+    ID_Slime        = 17119;
   // NPC ID's
-    ID_Disciple   = 1686;
-    ID_FremBank   = 9710;
+    ID_Disciple     = 1686;
+    ID_FremBank     = 9710;
   // Paths
-    PATH_FremBank = 0;
-    PATH_StairUF1 = 1;
-    PATH_TrapDoor = 2;
-    PATH_StairDFB1= 3;
-    PATH_StairDFB2= 4;
-    PATH_StairDFB3= 5;
+    PATH_FremBank   = 0;
+    PATH_StairUF1   = 1;
+    PATH_StairDF1   = 2;
+    PATH_TrapDoor   = 3;
+    PATH_StairDFB1  = 4;
+    PATH_StairDFB2  = 5;
+    PATH_StairDFB3  = 6;
+    PATH_Token      = 7;
+  // Player Index
+    PLAYER_BONE     = 0;
+    PLAYER_BONETODO = 1;
+    PLAYER_BONEDONE = 2;
+
 
 {*******************************************************************************
                             End Constants and Vars
@@ -133,19 +157,46 @@ begin
 end;
 
 {*******************************************************************************
+function R_LastChatMessage: String;
+Description: [REF] Returns the last chat message
+*******************************************************************************}
+function R_LastChatMessage: String;
+var
+  i: Integer;
+begin
+  if not R_ValidInterface(137) then
+  begin
+    Debug('Invalid Interface in R_LastChatMessage', False);
+    Exit;
+  end;
+  for i := 279 downto 180 do
+  begin
+    Result := R_GetInterfaceText(137, i);
+    if (Result = '') then
+      Continue
+    else
+      Exit;
+  end;
+end;
+
+{*******************************************************************************
 function R_LoadPath(Path: Integer): TPointArray;
 Description: [REF] Loads Reflection Path.
 *******************************************************************************}
 function R_LoadPath(Path: Integer): TPointArray;
 begin
   case Path of
-    PATH_FremBank:  Result := [Point(3448, 3698), Point(3448, 3703), Point(3448, 3707),
-                               Point(3448, 3712), Point(3450, 3716), Point(3451, 3721)];
-    PATH_StairUF1:  Result := [Point(3448, 3516)];
-    PATH_TrapDoor:  Result := [Point(3653, 3518)];
+    {PATH_FremBank:  Result := [Point(3448, 3698), Point(3448, 3703), Point(3448, 3707),
+                               Point(3448, 3712), Point(3450, 3716), Point(3451, 3721)]; }
+    PATH_FremBANK:  Result := [Point(3443, 3694), Point(3447, 3698), Point(3450, 3705),
+                               Point(3449, 3712), Point(3449, 3720)];
+    PATH_StairUF1:  Result := [Point(3663, 3520)];
+    PATH_StairDF1:  Result := [Point(3666, 3522)];
+    PATH_TrapDoor:  Result := [Point(3656, 3519)];
     PATH_StairDFB1: Result := [Point(3680, 9874), Point(3687, 9877), Point(3692, 9888)];
     PATH_StairDFB2: Result := [Point(3671, 9888)];
     PATH_StairDFB3: Result := [Point(3687, 9888)];
+    PATH_Token:     Result := [Point(3659, 3515)];
   end;
 end;
 
@@ -155,18 +206,61 @@ Description: [REF] Walk to ...
 *******************************************************************************}
 function R_WalkTo(Path: Integer): Boolean;
 begin
-  SetAngle(True);
-  //MakeCompass('n');
-  SetRun(True);
+  R_SetCameraAngle(100);
+  R_SetRun(True);
   if (R_WalkPath(R_LoadPath(Path))) then
     Result := True;
+  while not R_IsIdle do
+    Wait(1000);
+  Wait(800 + Random(300));
 end;
 
 {*******************************************************************************
-function R_GrindBones(ID: Integer): Boolean;
+function R_ClickTo(Path: Integer): Boolean;
+Description: [REF] Click to ...
+*******************************************************************************}
+function R_ClickTo(Path: Integer): Boolean;
+var
+  t: TTileArray;
+  TP: TPoint;
+begin
+  R_SetCameraAngle(100);
+  R_SetRun(True);
+  t := R_LoadPath(Path);
+  if R_TileOnMS(t[0], 1) then
+  begin
+    TP := R_TileToMS(t[0], 1);
+    Mouse(TP.x, TP.y, 2, 2, True);
+    Result := True;
+    Wait(800);
+  end;
+  while not R_IsIdle do
+    Wait(1000);
+  Wait(800 + Random(300));
+end;
+
+{*******************************************************************************
+function GetGroundID(BoneID: Integer): Integer;
+Description: Returns the Crushed ID of a bone
+*******************************************************************************}
+function GetGroundID(BoneID: Integer): Integer;
+begin
+  case BoneID of
+    ID_Bone:       Result := ID_BoneC;
+    ID_BigBone:    Result := ID_BigBoneC;
+    ID_BabyBone:   Result := ID_BabyBoneC;
+    ID_WyvernBone: Result := ID_WyvernBoneC;
+    ID_DragonBone: Result := ID_DragonBoneC;
+    ID_OurgBone:   Result := ID_OurgBoneC;
+    ID_FrostDBone: Result := ID_FrostDBoneC;
+  end;
+end;
+
+{*******************************************************************************
+function R_GrindBones(BoneID: Integer): Boolean;
 Description: [REF] Grinds bones
 *******************************************************************************}
-function R_GrindBones(GroundID: Integer): Boolean;
+function R_GrindBones(BoneID: Integer): Boolean;
 var
   o: TRSObject;
   TP: TPoint;
@@ -182,15 +276,16 @@ begin
   GetMousePos(TP.x, TP.y);
   if R_IsUpText('Fill') then
     Mouse(TP.x, TP.y, 0, 0, True);
-  while (not (R_CountItem(GroundID) = 9)) do
+  while (not (R_CountItem(GetGroundID(BoneID)) = 9)) do
     Wait(1000);
+  Result := (R_CountItem(GetGroundID(BoneID)) = 9);
 end;
 
 {*******************************************************************************
-function R_UseStair(ID: Integer; UpText: String): Boolean;
-Description: [REF] Uses Stairs
+function R_UseStair(ID: Integer; UpText: String; ExpectedTile: TTile): Boolean;
+Description: [REF] Uses Stairs, waits until the expected tile is met
 *******************************************************************************}
-function R_UseStair(ObjType, ID: Integer; UpText: String): Boolean;
+function R_UseStair(ObjType, ID: Integer; UpText: String; ExpectedTile, ExpectedTile2: TTile): Boolean;
 var
   o: TRSObject;
   TP: TPoint;
@@ -198,8 +293,11 @@ begin
   o := R_GetObject(ID, ObjType, 20);
   if o = NULL_RSOBJECT then
   begin
-    if ((ID = ID_TrapDoorO) or (ID = ID_TrapDoorC)) then
+    if (ID = ID_TrapDoorC) then
+    begin
+      Debug('Trap Door Already Open', False);
       Exit;
+    end;
     Debug('Null RSObject in R_UseStair', False);
     Exit;
   end;
@@ -210,7 +308,17 @@ begin
   begin
     Mouse(TP.x, TP.y, 0, 0, True);
     Result := True;
+  end else
+  if R_IsUpText('ciple') then
+  begin
+    Mouse(TP.x, TP.y, 0, 0, False);
+    Result := R_ChooseOption(UpText);
   end;
+  if ExpectedTile = Point(0, 0) then
+    Exit;
+  while (not ((R_GetMyPos = ExpectedTile) or (R_GetMyPos = ExpectedTile2))) do
+    Wait(1000);
+  Wait(1000);
 end;
 
 {*******************************************************************************
@@ -222,10 +330,11 @@ var
   o: TRSObject;
   TP: TPoint;
 begin
+  R_MakeCompass('n');
   o := R_GetObject(ID, ObjType, 20);
   if o = NULL_RSOBJECT then
   begin
-    if ((ID = ID_TrapDoorO) or (ID = ID_TrapDoorC)) then
+    if (ID = ID_TrapDoorC) then
       Exit;
     Debug('Null RSObject in R_UseStair', False);
     Exit;
@@ -238,11 +347,11 @@ begin
   if left then
   begin
     R_DrawLine(False, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1), R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y2), 1), clBlue);
-    TP := Point(RandomRange(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x - 10, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x + 10), RandomRange(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).y, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y2), 1).y));
+    TP := Point(RandomRange(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x - 10, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x + 10), RandomRange(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).y + 10, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y2), 1).y - 10));
   end else
   begin
     R_DrawLine(False, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1), R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1), clBlue);
-    TP := Point(RandomRange(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).x - 10, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).x + 10), RandomRange(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).y, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).y));
+    TP := Point(RandomRange(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).x - 10, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).x + 10), RandomRange(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).y + 10, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).y - 10));
   end;
 
   R_DrawCircle(False, TP, 3,  clGreen);
@@ -257,7 +366,7 @@ begin
 end;
 
 {*******************************************************************************
-function function R_ToSlime: Boolean;
+function R_ToSlime: Boolean;
 Description: [REF] Walks to the slime
 *******************************************************************************}
 function R_ToSlime: Boolean;
@@ -266,7 +375,7 @@ var
   t: TIntegerArray;
   b: TBoolArray;
 begin
-ClearSmartCanvas;
+  ClearSmartCanvas;
   t := [3688, 3675, 3683];
   b := [False, True, False];
   for i := PATH_StairDFB1 to PATH_StairDFB3 do
@@ -276,14 +385,11 @@ ClearSmartCanvas;
       Wait(1000);
     Wait(RandomRange(1200, 1500));
     Debug('At Stair', False);
-    R_UseStair2(OBJ_INTERACTABLE, ID_StairDFB, 'own', b[i - 3]);
+    R_UseStair2(OBJ_INTERACTABLE, ID_StairDFB, 'own', b[i - 4]);
     while not R_IsIdle do                                      // #1: (3688, 9888)
       Wait(1000);                                              // #2: (3675, 9888)
-    Wait(RandomRange(1000, 1300));                             // #3: (3683, 9888)
-    if R_GetMyPos = Point(t[i - 3], 9888) then
-      Debug('Down Stair', False)
-    else
-      Debug('Failed to walk down stairs', True);
+    while not (R_GetMyPos = Point(t[i - 4], 9888)) do          // #3: (3683, 9888)
+      Wait(1000);
     ClearSmartCanvas;
   end;
   Result := R_GetMyPos = Point(t[2], 9888);
@@ -312,6 +418,7 @@ begin
     Mouse(TP.x, TP.y, 0, 0, True);
   while (not (R_CountItem(ID_BucketS) = 9)) do
     Wait(1000);
+  Result := (R_CountItem(ID_BucketS) = 9);
 end;
 
 {*******************************************************************************
@@ -339,6 +446,7 @@ begin
       Mouse(TP.x, TP.y, 0, 0, True);
       Wait(RandomRange(500, 800));
     end;
+  IncEx(Players[CurrentPlayer].Integers[PLAYER_BONEDONE], 9);
   Result := ((R_CountItem(ID_Bucket) = 9) and (R_CountItem(ID_Pot) = 9));
 end;
 
@@ -358,12 +466,22 @@ begin
     Debug('Null NPC in R_CollectTokens', False);
     Exit;
   end;
+  if NPC.Motion > 1 then
+    while NPC.Motion > 1 do
+    begin
+      Writeln('Moving');
+      Wait(1000);
+      NPC := R_GetNPC(ID_Disciple, False);
+    end;
   TP := R_TileToMS(NPC.Tile, 1);
   Mouse(TP.x, TP.y, 2, 2, False);
   Wait(500 + Random(25));
   R_ChooseOption('ollect');
   Wait(800 + Random(400));
   Result := R_ItemExists(ID_Token, Item);
+  if not Result then
+    R_CollectTokens;
+  Wait(700 + Random (300));
 end;
 
 {*******************************************************************************
@@ -397,16 +515,30 @@ function R_UseBankFrem(BoneID: Integer): Boolean;
 Description: [REF] Uses the bank
 *******************************************************************************}
 function R_UseBankFrem(BoneID: Integer): Boolean;
+var
+  Item: TInvItem;
 begin
   if not R_OpenBankFrem then
     Exit;
-  R_DepositAllBy(ID_Token);
+  if R_ItemExists(ID_Token, Item) then
+    R_DepositAllBy(ID_Token);
   Wait(250 + Random(250));
-  R_WithdrawItem(BoneID, True);
+  if not R_WithdrawItem(BoneID, True) then
+    Debug('Could not withdraw bones', True);
   R_CloseBank;
   Result := not R_BankScreen;
 end;
 
+{*******************************************************************************
+function R_OpenTrapDoor: Boolean;
+Description: [REF] Opens Trap Door
+*******************************************************************************}
+function R_OpenTrapDoor: Boolean;
+begin
+  if R_UseStair(OBJ_FLOORDECORATION, ID_TrapDoorC, 'pen', Point(0, 0), Point(0, 0)) then
+    Wait(4000 + Random(300));
+  Result := R_UseStair(OBJ_FLOORDECORATION, ID_TrapDoorO, 'own', Point(3669, 9888), Point(0, 0));
+end;
 
 {*******************************************************************************
 function R_UseRing: Boolean;
@@ -418,6 +550,10 @@ begin
   R_ClickInterface(R_GetInterfaceChild(INTERFACE_EQUIPMENT, EQUIPMENT_RING), 2);
   Wait(250 + Random(25));
   Result := R_ChooseOption('elep');
+  Wait(2000);
+  while not R_IsIdle do
+    Wait(1000);
+  Wait(5500 + Random(400));
 end;
 
 {*******************************************************************************
@@ -427,7 +563,11 @@ Description: [REF] Teleports using ectophial
 function R_UseEctophial: Boolean;
 begin
   R_GameTab(RTAB_INVENTORY);
-  Result := R_ClickItemBy(ID_Ectophial, 'mpty');
+  R_ClickItemBy(ID_Ectophial, 'mpty');
+  while (not (R_LastChatMessage = 'You refill the ectophial from the Ectofuntus.')) do
+    Wait(1000);
+  Wait(100 + Random(300));
+  Result := True;
 end;
 
 {*******************************************************************************
@@ -450,6 +590,42 @@ begin
   Result := True;
 end;
 
+{*******************************************************************************
+procedure Report;
+Description: Displays progress report.
+*******************************************************************************}
+procedure Report;
+var
+  i: Integer;
+begin
+  SRLRandomsReport;
+  WriteLn(' __________________________________');
+  WriteLn('|                                  ');
+  WriteLn('| ---------- Ectofuntus -----------');
+  WriteLn('|__________________________________');
+  WriteLn('|                                  ');
+  WriteLn('|Ran For: ' + TimeRunning);
+  WriteLn('|__________________________________');
+  WriteLn('|                                  ');
+  for i := 0 to (HowManyPlayers - 1) do
+    WriteLn('|Player[' + IntToStr(i) + ']: Worshipped: ' + IntToStr(Players[i].Integers[PLAYER_BONEDONE]) + ' Bones');
+  WriteLn('|__________________________________');
+ { WriteLn('|                                  ');
+  for i := 0 to (HowManyPlayers - 1) do
+  begin
+    WriteLn('|Player[' + IntToStr(i) + ']: Breaked: ' + IntToStr(Players[i].Integers[PLAYER_BREAKS_NUM]) + ' Times');
+    WriteLn('|Player[' + IntToStr(i) + ']: Breaked For: ' + Int64ToStr(Round(Players[i].Integers[PLAYER_BREAKS_TOTAL] / 60000)) + ' Total Minutes');
+  end;
+  WriteLn('|__________________________________');
+  WriteLn('|                                  ');
+  for i := 0 to (HowManyPlayers - 1) do
+    WriteLn('|Player[' + IntToStr(i) + ']: Exp Gained: ' + IntToStr(Players[i].Integers[PLAYER_EXP_NEW] - Players[i].Integers[PLAYER_EXP_OLD]));
+  WriteLn('|__________________________________');}
+  WriteLn('|                                  ');
+  WriteLn('| ------------ r!ch!e ------------ ');
+  WriteLn('|__________________________________');
+  WriteLn('');
+end;
 
 {*******************************************************************************
 procedure ScriptTerminate;
@@ -457,7 +633,7 @@ Description: Last things to execute when script has finished or terminated.
 *******************************************************************************}
 procedure ScriptTerminate;
 begin
-  // Progress Report
+  Report;
   //if LoggedIn then
     //LogOut;
 end;
@@ -471,15 +647,38 @@ begin
   if not LoggedIn then
     LoginPlayer;
   Wait(1500 + Random(30));
-  SetAngle(True);
-  MakeCompass('N');
-  SetRun(True);
+  R_SetCameraAngle(100);
+  R_MakeCompass('n');
+  R_SetRun(True);
+  Debug('Current Position: (' + IntToStr(R_GetMyPos.x) + ', ' + IntToStr(R_GetMyPos.y) + ')', False);
 end;
 
 {*******************************************************************************
                                   End Script
 *******************************************************************************}
 
+function EctoLoop: Boolean;
+begin
+  if R_OpenBankFrem then
+    if R_UseBankFrem(Players[CurrentPlayer].Integers[PLAYER_BONE]) then
+      if R_UseEctophial then
+        if R_ClickTo(PATH_StairUF1) then
+          if R_UseStair(OBJ_INTERACTABLE, ID_StairUF1, 'Up', Point(3666, 3522), Point(3667, 3522)) then
+            if R_GrindBones(Players[CurrentPlayer].Integers[PLAYER_BONE]) then
+              if R_WalkTo(PATH_StairDF1) then
+                if R_UseStair(OBJ_INTERACTABLE, ID_StairDF1, 'own', Point(3666, 3517), Point(3667, 3517)) then
+                  if R_WalkTo(PATH_TrapDoor) then
+                    if R_OpenTrapDoor then
+                      if R_ToSlime then
+                        if R_GetSlime then
+                          if R_UseEctophial then
+                            if R_Worship then
+                              if R_WalkTo(PATH_Token) then
+                                if R_CollectTokens then
+                                  if R_UseRing then
+                                    if R_WalkTo(PATH_FremBank) then
+                                      Result := True;
+end;
 {*******************************************************************************
 procedure MainLoop;
 Description: The Main Loop :)
@@ -487,22 +686,16 @@ Description: The Main Loop :)
 procedure MainLoop;
 begin
   SetupRS;
-
-  Debug('Current Position: (' + IntToStr(R_GetMyPos.x) + ', ' + IntToStr(R_GetMyPos.y) + ')', False);
-
-  //R_UseStair2(OBJ_INTERACTABLE, ID_StairDFB, 'own');
-  //TerminateScript;
- // R_UseStair(OBJ_FLOORDECORATION, ID_TrapDoorC, 'pen');
- // R_UseStair(OBJ_FLOORDECORATION, ID_TrapDoorO, 'own');
-
-  //SetAngle(False);
-
-  //DebugInterfaces;
-  //R_ToSlime;
-  //R_GetSlime;
-  //R_GrindBones(ID_BoneC);
-  //if R_Worship then
-    //R_CollectTokens;
+  R_CheckSetup;
+  repeat
+    if not EctoLoop then
+    begin
+      NextPlayer(False);
+      Exit;
+    end;
+  until(Players[CurrentPlayer].Integers[PLAYER_BONEDONE] >= Players[CurrentPlayer].Integers[PLAYER_BONETODO]);
+  Report;
+  NextPlayer(False);
 end;
 
 begin
@@ -513,7 +706,8 @@ begin
   MouseSpeed := MOUSE_SPEED;
   DeclarePlayers;
 
-  //repeat
+   //Debug('Current Position: (' + IntToStr(R_GetMyPos.x) + ', ' + IntToStr(R_GetMyPos.y) + ')', True);
+  repeat
     MainLoop;
-  //until(AllPlayersInActive);
+  until(AllPlayersInActive);
 end.
