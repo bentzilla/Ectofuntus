@@ -3,7 +3,8 @@ program Ectofuntus;
 {$I SRL\SRL.scar}
 {$I Reflection\Reflection.simba}
 {$I SRL\SRL\Misc\PaintSMART.scar}
-{$I Reflection1\Core\RefPaint.simba}
+{$I RefPaint.simba}
+{$I InterfaceExplorer.simba}
 
 {******************************************************************************)
                                   Setup Here
@@ -64,6 +65,7 @@ const
     ID_BoneC      = 4255;
     ID_BigBone    = 532;
     ID_BigBoneC   = 4257;
+    // Finish List
   // Equipment ID's
     ID_Ectophial  = 4251;
     ID_RingOfKin  = 15707;
@@ -76,20 +78,25 @@ const
     ID_Bin        = 11164;
     ID_Grinder    = 11163;
     ID_Hopper     = 11162;
-    ID_StairUpF1  = 37454;
+    ID_StairUF1   = 37454;
     ID_StairDF1   = 5281;
     ID_TrapDoorC  = 5267;
     ID_TrapDoorO  = 5268;
     ID_Ladder     = 5264;
-    ID_Shortcut   = 0;    // Get This
+    ID_Shortcut   = 17030; //?
     ID_StairDFB   = 5263;
-    ID_StairUpFB  = 5262;
+    ID_StairUFB   = 5262;
     ID_Slime      = 17119;
   // NPC ID's
     ID_Disciple   = 1686;
     ID_FremBank   = 9710;
   // Paths
     PATH_FremBank = 0;
+    PATH_StairUF1 = 1;
+    PATH_TrapDoor = 2;
+    PATH_StairDFB1= 3;
+    PATH_StairDFB2= 4;
+    PATH_StairDFB3= 5;
 
 {*******************************************************************************
                             End Constants and Vars
@@ -120,7 +127,7 @@ begin
   Writeln('[' + Time + ']: ' + s);
   if Terminate then
   begin
-    Writeln(Time + ' Terminating Script');
+    Writeln('[' + Time + ']: Terminating Script');
     TerminateScript;
   end;
 end;
@@ -134,6 +141,11 @@ begin
   case Path of
     PATH_FremBank:  Result := [Point(3448, 3698), Point(3448, 3703), Point(3448, 3707),
                                Point(3448, 3712), Point(3450, 3716), Point(3451, 3721)];
+    PATH_StairUF1:  Result := [Point(3448, 3516)];
+    PATH_TrapDoor:  Result := [Point(3653, 3518)];
+    PATH_StairDFB1: Result := [Point(3680, 9874), Point(3687, 9877), Point(3692, 9888)];
+    PATH_StairDFB2: Result := [Point(3671, 9888)];
+    PATH_StairDFB3: Result := [Point(3687, 9888)];
   end;
 end;
 
@@ -144,10 +156,214 @@ Description: [REF] Walk to ...
 function R_WalkTo(Path: Integer): Boolean;
 begin
   SetAngle(True);
-  MakeCompass('n');
+  //MakeCompass('n');
   SetRun(True);
   if (R_WalkPath(R_LoadPath(Path))) then
     Result := True;
+end;
+
+{*******************************************************************************
+function R_GrindBones(ID: Integer): Boolean;
+Description: [REF] Grinds bones
+*******************************************************************************}
+function R_GrindBones(GroundID: Integer): Boolean;
+var
+  o: TRSObject;
+  TP: TPoint;
+begin
+  o := R_GetObject(ID_Hopper, OBJ_INTERACTABLE, 30);
+  if o = NULL_RSOBJECT then
+  begin
+    Debug('Null RSObject in R_GrindBones', False);
+    Exit;
+  end;
+  TP := R_TileToMS(o.Tile, 1);
+  MMouse(TP.x, TP.y, 2, 2);
+  GetMousePos(TP.x, TP.y);
+  if R_IsUpText('Fill') then
+    Mouse(TP.x, TP.y, 0, 0, True);
+  while (not (R_CountItem(GroundID) = 9)) do
+    Wait(1000);
+end;
+
+{*******************************************************************************
+function R_UseStair(ID: Integer; UpText: String): Boolean;
+Description: [REF] Uses Stairs
+*******************************************************************************}
+function R_UseStair(ObjType, ID: Integer; UpText: String): Boolean;
+var
+  o: TRSObject;
+  TP: TPoint;
+begin
+  o := R_GetObject(ID, ObjType, 20);
+  if o = NULL_RSOBJECT then
+  begin
+    if ((ID = ID_TrapDoorO) or (ID = ID_TrapDoorC)) then
+      Exit;
+    Debug('Null RSObject in R_UseStair', False);
+    Exit;
+  end;
+  TP := R_TileToMS(o.Tile, 1);
+  MMouse(TP.x, TP.y, 2, 2);
+  GetMousePos(TP.x, TP.y);
+  if R_IsUpText(UpText) then
+  begin
+    Mouse(TP.x, TP.y, 0, 0, True);
+    Result := True;
+  end;
+end;
+
+{*******************************************************************************
+function R_UseStair2(ID: Integer; UpText: String; Left: Boolean): Boolean;
+Description: [REF] Uses Ecto Stairs. Cuts Object into half either left/right
+*******************************************************************************}
+function R_UseStair2(ObjType, ID: Integer; UpText: String; Left: Boolean): Boolean;
+var
+  o: TRSObject;
+  TP: TPoint;
+begin
+  o := R_GetObject(ID, ObjType, 20);
+  if o = NULL_RSOBJECT then
+  begin
+    if ((ID = ID_TrapDoorO) or (ID = ID_TrapDoorC)) then
+      Exit;
+    Debug('Null RSObject in R_UseStair', False);
+    Exit;
+  end;
+  Writeln('X1: ' + IntToStr(o.TileArea.X1) + ' | Y1: ' + IntToStr(o.TileArea.Y1) + ' | X2: ' + IntToStr(o.TileArea.X2) + ' | Y2: ' + IntToStr(o.TileArea.Y2));
+  Writeln('Point 1: (' + IntToStr(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x) + ', ' + IntToStr(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).y) + ')');
+  Writeln('Point 2: (' + IntToStr(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).x) + ', ' + IntToStr(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).y) + ')');
+  R_DrawLine(True, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1), R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1), clRed);
+
+  if left then
+  begin
+    R_DrawLine(False, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1), R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y2), 1), clBlue);
+    TP := Point(RandomRange(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x - 10, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x + 10), RandomRange(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).y, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y2), 1).y));
+  end else
+  begin
+    R_DrawLine(False, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1), R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1), clBlue);
+    TP := Point(RandomRange(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).x - 10, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).x + 10), RandomRange(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).y, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).y));
+  end;
+
+  R_DrawCircle(False, TP, 3,  clGreen);
+
+  MMouse(TP.x, TP.y, 5, 2);
+  GetMousePos(TP.x, TP.y);
+  if R_IsUpText(UpText) then
+  begin
+    Mouse(TP.x, TP.y, 0, 0, True);
+    Result := True;
+  end;
+end;
+
+{*******************************************************************************
+function function R_ToSlime: Boolean;
+Description: [REF] Walks to the slime
+*******************************************************************************}
+function R_ToSlime: Boolean;
+var
+  i: Integer;
+  t: TIntegerArray;
+  b: TBoolArray;
+begin
+ClearSmartCanvas;
+  t := [3688, 3675, 3683];
+  b := [False, True, False];
+  for i := PATH_StairDFB1 to PATH_StairDFB3 do
+  begin
+    R_WalkTo(i);
+    while not R_IsIdle do
+      Wait(1000);
+    Wait(RandomRange(1200, 1500));
+    Debug('At Stair', False);
+    R_UseStair2(OBJ_INTERACTABLE, ID_StairDFB, 'own', b[i - 3]);
+    while not R_IsIdle do                                      // #1: (3688, 9888)
+      Wait(1000);                                              // #2: (3675, 9888)
+    Wait(RandomRange(1000, 1300));                             // #3: (3683, 9888)
+    if R_GetMyPos = Point(t[i - 3], 9888) then
+      Debug('Down Stair', False)
+    else
+      Debug('Failed to walk down stairs', True);
+    ClearSmartCanvas;
+  end;
+  Result := R_GetMyPos = Point(t[2], 9888);
+end;
+
+{*******************************************************************************
+function R_GetSlime: Boolean;
+Description: [REF] Gets slime
+*******************************************************************************}
+function R_GetSlime: Boolean;
+var
+  o: TRSObject;
+  TP: TPoint;
+begin
+  R_ClickItemBy(ID_Bucket, 'Use');
+  o := R_GetObject(ID_Slime, OBJ_FLOORDECORATION, 30);
+  if o = NULL_RSOBJECT then
+  begin
+    Debug('Null RSObject in R_GetSlime', False);
+    Exit;
+  end;
+  TP := R_TileToMS(o.Tile, 1);
+  MMouse(TP.x, TP.y, 2, 2);
+  GetMousePos(TP.x, TP.y);
+  if R_IsUpText('lime') then
+    Mouse(TP.x, TP.y, 0, 0, True);
+  while (not (R_CountItem(ID_BucketS) = 9)) do
+    Wait(1000);
+end;
+
+{*******************************************************************************
+function R_Worship: Boolean;
+Description: [REF] Worships ectonfuntus
+*******************************************************************************}
+function R_Worship: Boolean;
+var
+  o: TRSObject;
+  TP: TPoint;
+  Item: TInvItem;
+begin
+  o := R_GetObject(ID_Ecto, OBJ_INTERACTABLE, 30);
+  if o = NULL_RSOBJECT then
+  begin
+    Debug('Null RSObject in R_Worship', False);
+    Exit;
+  end;
+  TP := R_TileToMS(o.Tile, 1);
+  MMouse(TP.x, TP.y, 2, 2);
+  GetMousePos(TP.x, TP.y);
+  if R_IsUpText('orship') then
+    while (R_ItemExists(ID_BucketS, Item)) do
+    begin
+      Mouse(TP.x, TP.y, 0, 0, True);
+      Wait(RandomRange(500, 800));
+    end;
+  Result := ((R_CountItem(ID_Bucket) = 9) and (R_CountItem(ID_Pot) = 9));
+end;
+
+{*******************************************************************************
+function R_CollectTokens: Boolean;
+Description: [REF] Collects Tokens
+*******************************************************************************}
+function R_CollectTokens: Boolean;
+var
+  NPC: TNPC;
+  TP: TPoint;
+  Item: TInvItem;
+begin
+  NPC := R_GetNPC(ID_Disciple, False);
+  if NPC = NULL_NPC then
+  begin
+    Debug('Null NPC in R_CollectTokens', False);
+    Exit;
+  end;
+  TP := R_TileToMS(NPC.Tile, 1);
+  Mouse(TP.x, TP.y, 2, 2, False);
+  Wait(500 + Random(25));
+  R_ChooseOption('ollect');
+  Wait(800 + Random(400));
+  Result := R_ItemExists(ID_Token, Item);
 end;
 
 {*******************************************************************************
@@ -181,9 +397,6 @@ function R_UseBankFrem(BoneID: Integer): Boolean;
 Description: [REF] Uses the bank
 *******************************************************************************}
 function R_UseBankFrem(BoneID: Integer): Boolean;
-var
-  NPC: TNPC;
-  TP: TPoint;
 begin
   if not R_OpenBankFrem then
     Exit;
@@ -275,9 +488,21 @@ procedure MainLoop;
 begin
   SetupRS;
 
-  Debug(IntToStr(R_GetMyPos.x) + ', ' + IntToStr(R_GetMyPos.y), False);
+  Debug('Current Position: (' + IntToStr(R_GetMyPos.x) + ', ' + IntToStr(R_GetMyPos.y) + ')', False);
 
-  R_WalkTo(PATH_FremBank);
+  //R_UseStair2(OBJ_INTERACTABLE, ID_StairDFB, 'own');
+  //TerminateScript;
+ // R_UseStair(OBJ_FLOORDECORATION, ID_TrapDoorC, 'pen');
+ // R_UseStair(OBJ_FLOORDECORATION, ID_TrapDoorO, 'own');
+
+  //SetAngle(False);
+
+  //DebugInterfaces;
+  //R_ToSlime;
+  //R_GetSlime;
+  //R_GrindBones(ID_BoneC);
+  //if R_Worship then
+    //R_CollectTokens;
 end;
 
 begin
