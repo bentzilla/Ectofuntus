@@ -120,7 +120,12 @@ const
     PLAYER_BONE     = 0;
     PLAYER_BONETODO = 1;
     PLAYER_BONEDONE = 2;
-
+  // Player Locations
+    LOC_PREBANK     = 'Daemonheim';
+    LOC_BANK        = 'Bank';
+    LOC_FB          = 'Collecting Slime';
+    LOC_FM          = 'Main Floor';
+    LOC_F1          = 'Grinding';
 
 {*******************************************************************************
                             End Constants and Vars
@@ -129,6 +134,11 @@ const
 {*******************************************************************************
                                    Script
 *******************************************************************************}
+
+function NULL_TILEARRAY: TTileArray;
+begin
+  Result := [NULL_TILE];
+end;
 
 {*******************************************************************************
 function Time: String;
@@ -282,10 +292,31 @@ begin
 end;
 
 {*******************************************************************************
-function R_UseStair(ID: Integer; UpText: String; ExpectedTile: TTile): Boolean;
-Description: [REF] Uses Stairs, waits until the expected tile is met
+function R_OnExpectedTile(ExpectedTiles: TTileArray): boolean;
+Description: [REF] Returns true if Players position is on one of ExpectedTiles
 *******************************************************************************}
-function R_UseStair(ObjType, ID: Integer; UpText: String; ExpectedTile, ExpectedTile2: TTile): Boolean;
+function R_OnExpectedTile(ExpectedTiles: TTileArray): boolean;
+var
+  i: Integer;
+begin
+  if (Length(ExpectedTiles) = 0) then
+  begin
+    Debug('Empty TTileArray in R_OnExpectedTile', False);
+    Exit;
+  end;
+  for i := 0 to High(ExpectedTiles) do
+    if (R_GetMyPos = ExpectedTiles[i]) then
+    begin
+      Result := True;
+      Exit;
+    end;
+end;
+
+{*******************************************************************************
+function R_UseStair(ObjType, ID: Integer; UpText: String; ExpectedTiles: TTileArray): Boolean;
+Description: [REF] Uses Stairs, waits until one of the expected tiles is met
+*******************************************************************************}
+function R_UseStair(ObjType, ID: Integer; UpText: String; ExpectedTiles: TTileArray): Boolean;
 var
   o: TRSObject;
   TP: TPoint;
@@ -314,11 +345,13 @@ begin
     Mouse(TP.x, TP.y, 0, 0, False);
     Result := R_ChooseOption(UpText);
   end;
-  if ExpectedTile = Point(0, 0) then
+  if ExpectedTiles = NULL_TILEARRAY then
     Exit;
-  while (not ((R_GetMyPos = ExpectedTile) or (R_GetMyPos = ExpectedTile2))) do
+  while (not (R_OnExpectedTile(ExpectedTiles))) do
     Wait(1000);
-  Wait(1000);
+  while (not (R_IsIdle)) do
+    Wait(1000);
+  Wait(1000 + Random(300));
 end;
 
 {*******************************************************************************
@@ -343,23 +376,33 @@ begin
   Writeln('Point 1: (' + IntToStr(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x) + ', ' + IntToStr(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).y) + ')');
   Writeln('Point 2: (' + IntToStr(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).x) + ', ' + IntToStr(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).y) + ')');
   R_DrawLine(True, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1), R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1), clRed);
+  R_DrawCircle(False, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1), 4, clGreen);
 
   if left then
   begin
     R_DrawLine(False, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1), R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y2), 1), clBlue);
-    TP := Point(RandomRange(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x - 10, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x + 10), RandomRange(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).y + 10, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y2), 1).y - 10));
+    R_DrawCircle(False, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1), 4, clGreen);
+    TP := Point(RandomRange(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x - 10, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x + 10), RandomRange(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).y - 30, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y2), 1).y + 30));
   end else
   begin
     R_DrawLine(False, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1), R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1), clBlue);
-    TP := Point(RandomRange(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).x - 10, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).x + 10), RandomRange(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).y + 10, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).y - 10));
+    R_DrawCircle(False, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1), 4, clGreen);
+    TP := Point(RandomRange(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).x - 10, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).x + 10), RandomRange(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).y + 30, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).y - 30));
   end;
 
   R_DrawCircle(False, TP, 3,  clGreen);
 
-  MMouse(TP.x, TP.y, 5, 2);
-  GetMousePos(TP.x, TP.y);
+  MMouse(TP.x, TP.y, 0, 0);
+  Wait(400 + Random(200));
+  //GetMousePos(TP.x, TP.y);
   if R_IsUpText(UpText) then
   begin
+    if (Random(3) = 0) then
+    begin
+      Mouse(TP.x, TP.y, 0, 0, False);
+      Result := R_WaitOption(UpText, 300 + Random(200));
+      Exit;
+    end;
     Mouse(TP.x, TP.y, 0, 0, True);
     Result := True;
   end;
@@ -369,7 +412,7 @@ end;
 function R_ToSlime: Boolean;
 Description: [REF] Walks to the slime
 *******************************************************************************}
-function R_ToSlime: Boolean;
+function R_ToSlime: Boolean;     // Check pos at any time + solve
 var
   i: Integer;
   t: TIntegerArray;
@@ -381,6 +424,7 @@ begin
   for i := PATH_StairDFB1 to PATH_StairDFB3 do
   begin
     R_WalkTo(i);
+    R_Flag;
     while not R_IsIdle do
       Wait(1000);
     Wait(RandomRange(1200, 1500));
@@ -460,16 +504,19 @@ var
   TP: TPoint;
   Item: TInvItem;
 begin
+  while (not (R_IsIdle)) do
+    Wait(1000);
   NPC := R_GetNPC(ID_Disciple, False);
   if NPC = NULL_NPC then
   begin
     Debug('Null NPC in R_CollectTokens', False);
     Exit;
   end;
+  Debug('R_CollectTokens: NPC Motion = ' + ToStr(NPC.Motion), False);
   if NPC.Motion > 1 then
     while NPC.Motion > 1 do
     begin
-      Writeln('Moving');
+      Debug('NPC Moving', False);
       Wait(1000);
       NPC := R_GetNPC(ID_Disciple, False);
     end;
@@ -502,10 +549,14 @@ begin
   TP := R_TileToMS(NPC.Tile, 1);
   Mouse(TP.x, TP.y, 2, 2, False);
   Wait(500 + Random(25));
-  R_ChooseOption('Bank Frem');
-  Wait(800 + Random(400));
+  if R_ChooseOption('Bank Frem') then
+    while (not ((R_BankScreen) or (R_PinScreen))) do
+      Wait(500 + Random(400))
+  else
+    Exit;
+  Wait(1000 + Random(400));
   if R_PinScreen then
-    if not InPin(Players[CurrentPlayer].Pin) then
+    if not R_InPin(Players[CurrentPlayer].Pin) then
       Debug('Could not enter Pin', True);
   Result := R_BankScreen;
 end;
@@ -535,9 +586,9 @@ Description: [REF] Opens Trap Door
 *******************************************************************************}
 function R_OpenTrapDoor: Boolean;
 begin
-  if R_UseStair(OBJ_FLOORDECORATION, ID_TrapDoorC, 'pen', Point(0, 0), Point(0, 0)) then
+  if R_UseStair(OBJ_FLOORDECORATION, ID_TrapDoorC, 'pen', NULL_TILEARRAY) then
     Wait(4000 + Random(300));
-  Result := R_UseStair(OBJ_FLOORDECORATION, ID_TrapDoorO, 'own', Point(3669, 9888), Point(0, 0));
+  Result := R_UseStair(OBJ_FLOORDECORATION, ID_TrapDoorO, 'own', [Point(3669, 9888)]);
 end;
 
 {*******************************************************************************
@@ -546,14 +597,22 @@ Description: [REF] Teleports using ring
 *******************************************************************************}
 function R_UseRing: Boolean;
 begin
+  Debug('in', False);
   R_GameTab(RTAB_EQUIPMENT);
-  R_ClickInterface(R_GetInterfaceChild(INTERFACE_EQUIPMENT, EQUIPMENT_RING), 2);
-  Wait(250 + Random(25));
-  Result := R_ChooseOption('elep');
+  Wait(800 + Random(300));
+  R_ClickInterface(R_GetInterfaceChild(INTERFACE_EQUIPMENT, EQUIPMENT_RING), 2); // Write Own, sometimes clicks outer edge
+  Result := R_WaitOption('elep', 800 + Random(50));
   Wait(2000);
+  Debug('2', false);
+  while (not (PointInBox(R_GetMyPos, IntToBox(3431, 3684, 3461, 3714)))) do
+  begin
+    Writeln(R_GetMyPos);
+    Wait(1000);
+  end;
+  Debug('3', false);
   while not R_IsIdle do
     Wait(1000);
-  Wait(5500 + Random(400));
+  Wait(2500 + Random(400));
 end;
 
 {*******************************************************************************
@@ -586,7 +645,10 @@ begin
   if (not (R_CountItem(ID_Bucket) = 9)) then
     Debug('Please have 9 buckets in Inventory', True);
   if (not (R_CountItem(ID_Pot) = 9)) then
+    if (not (Players[CurrentPlayer].Loc = LOC_FB)) then
     Debug('Please have 9 pots in Inventory', True);
+  if (not (R_CountItem(GetGroundID(Players[CurrentPlayer].Integers[PLAYER_BONE])) = 9)) then
+    Debug('9 pots of ground bones were not found when collecting slime', True);
   Result := True;
 end;
 
@@ -634,8 +696,36 @@ Description: Last things to execute when script has finished or terminated.
 procedure ScriptTerminate;
 begin
   Report;
-  //if LoggedIn then
-    //LogOut;
+  if LoggedIn then
+    LogOut;
+end;
+
+{*******************************************************************************
+procedure R_DetermineLocation;
+Description: [Ref] Determines current players location and loads it into Loc
+*******************************************************************************}
+procedure R_DetermineLocation;
+var
+  MyPos: TTile;
+begin
+  MyPos := R_GetMyPos;
+
+  if PointInBox(Mypos, IntToBox(3441, 3694, 3451, 3704)) then
+    Players[CurrentPlayer].Loc := LOC_PREBANK;
+
+  if PointInBox(MyPos, IntToBox(3668, 9873, 3692, 9903)) then
+    Players[CurrentPlayer].Loc := LOC_FB;
+
+  if PointInBox(MyPos, IntToBox(3651, 3511, 3668, 3530)) then
+    if (not (R_GetObject(ID_Ecto, OBJ_INTERACTABLE, 30) = NULL_RSOBJECT)) then
+      Players[CurrentPlayer].Loc := LOC_FM
+    else if (not (R_GetObject(ID_Grinder, OBJ_INTERACTABLE, 30) = NULL_RSOBJECT)) then
+      Players[CurrentPlayer].Loc := LOC_F1;
+
+  if (not (R_GetNPC(ID_FremBank, False) = NULL_NPC)) then
+    Players[CurrentPlayer].Loc := LOC_BANK;
+
+  Debug('Current Position: ' + Players[CurrentPlayer].Loc + ' | (' + IntToStr(MyPos.x) + ', ' + IntToStr(MyPos.y) + ')', False);
 end;
 
 {*******************************************************************************
@@ -650,7 +740,7 @@ begin
   R_SetCameraAngle(100);
   R_MakeCompass('n');
   R_SetRun(True);
-  Debug('Current Position: (' + IntToStr(R_GetMyPos.x) + ', ' + IntToStr(R_GetMyPos.y) + ')', False);
+  R_DetermineLocation;
 end;
 
 {*******************************************************************************
@@ -659,26 +749,47 @@ end;
 
 function EctoLoop: Boolean;
 begin
-  if R_OpenBankFrem then
-    if R_UseBankFrem(Players[CurrentPlayer].Integers[PLAYER_BONE]) then
-      if R_UseEctophial then
-        if R_ClickTo(PATH_StairUF1) then
-          if R_UseStair(OBJ_INTERACTABLE, ID_StairUF1, 'Up', Point(3666, 3522), Point(3667, 3522)) then
-            if R_GrindBones(Players[CurrentPlayer].Integers[PLAYER_BONE]) then
-              if R_WalkTo(PATH_StairDF1) then
-                if R_UseStair(OBJ_INTERACTABLE, ID_StairDF1, 'own', Point(3666, 3517), Point(3667, 3517)) then
-                  if R_WalkTo(PATH_TrapDoor) then
-                    if R_OpenTrapDoor then
-                      if R_ToSlime then
-                        if R_GetSlime then
-                          if R_UseEctophial then
-                            if R_Worship then
-                              if R_WalkTo(PATH_Token) then
-                                if R_CollectTokens then
-                                  if R_UseRing then
-                                    if R_WalkTo(PATH_FremBank) then
-                                      Result := True;
+  case Players[CurrentPlayer].Loc of
+    LOC_PREBANK: if R_WalkTo(PATH_FremBank) then
+                 begin
+                   Players[CurrentPlayer].Loc := LOC_BANK;
+                   Result := True;
+                 end;
+    LOC_BANK:    if R_UseBankFrem(Players[CurrentPlayer].Integers[PLAYER_BONE]) then
+                   if R_UseEctophial then
+                   begin
+                     Players[CurrentPlayer].Loc := LOC_FM;
+                     Result := True;
+                   end;
+    LOC_FM:      if R_ClickTo(PATH_StairUF1) then
+                   if R_UseStair(OBJ_INTERACTABLE, ID_StairUF1, 'Up', [Point(3666, 3522), Point(3667, 3522)]) then
+                   begin
+                     Players[CurrentPlayer].Loc := LOC_F1;
+                     Result := True;
+                   end;
+    LOC_F1:      if R_GrindBones(Players[CurrentPlayer].Integers[PLAYER_BONE]) then
+                   if R_WalkTo(PATH_StairDF1) then
+                     if R_UseStair(OBJ_INTERACTABLE, ID_StairDF1, 'own', [Point(3666, 3517), Point(3667, 3517)]) then
+                       if R_WalkTo(PATH_TrapDoor) then
+                         if R_OpenTrapDoor then
+                         begin
+                           Players[CurrentPlayer].Loc := LOC_FB;
+                           Result := True;
+                         end;
+    LOC_FB:      if R_ToSlime then
+                   if R_GetSlime then
+                     if R_UseEctophial then
+                       if R_Worship then
+                         if R_WalkTo(PATH_Token) then
+                           if R_CollectTokens then
+                             if R_UseRing then
+                             begin
+                               Players[CurrentPlayer].Loc := LOC_PREBANK;
+                               Result := True;
+                             end;
+  end;
 end;
+
 {*******************************************************************************
 procedure MainLoop;
 Description: The Main Loop :)
@@ -706,7 +817,7 @@ begin
   MouseSpeed := MOUSE_SPEED;
   DeclarePlayers;
 
-   //Debug('Current Position: (' + IntToStr(R_GetMyPos.x) + ', ' + IntToStr(R_GetMyPos.y) + ')', True);
+  //Debug('Current Position: (' + IntToStr(R_GetMyPos.x) + ', ' + IntToStr(R_GetMyPos.y) + ')', True);
   repeat
     MainLoop;
   until(AllPlayersInActive);
