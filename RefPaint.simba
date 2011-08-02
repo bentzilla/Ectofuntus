@@ -145,7 +145,7 @@ var
 begin
   TPA := SortedCircleTPA(Center, Radius);
   if Length(TPA) < 1 then Exit;
-  R_Debug('l:' +tostr(Length(TPA)), 'TPALENGTH');
+  //R_Debug('l:' +tostr(Length(TPA)), 'TPALENGTH');
   SMART_DrawDotsEx(Clear, TPA, Color);
 {$ELSE}
 begin

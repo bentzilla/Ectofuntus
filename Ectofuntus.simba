@@ -367,14 +367,13 @@ begin
   o := R_GetObject(ID, ObjType, 20);
   if o = NULL_RSOBJECT then
   begin
-    if (ID = ID_TrapDoorC) then
-      Exit;
     Debug('Null RSObject in R_UseStair', False);
     Exit;
   end;
   Writeln('X1: ' + IntToStr(o.TileArea.X1) + ' | Y1: ' + IntToStr(o.TileArea.Y1) + ' | X2: ' + IntToStr(o.TileArea.X2) + ' | Y2: ' + IntToStr(o.TileArea.Y2));
-  Writeln('Point 1: (' + IntToStr(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x) + ', ' + IntToStr(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).y) + ')');
-  Writeln('Point 2: (' + IntToStr(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).x) + ', ' + IntToStr(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).y) + ')');
+  Writeln('Line End 1: (' + IntToStr(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x) + ', ' + IntToStr(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).y) + ')');
+  Writeln('Line End 2: (' + IntToStr(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).x) + ', ' + IntToStr(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).y) + ')');
+
   R_DrawLine(True, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1), R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1), clRed);
   R_DrawCircle(False, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1), 4, clGreen);
 
@@ -382,17 +381,22 @@ begin
   begin
     R_DrawLine(False, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1), R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y2), 1), clBlue);
     R_DrawCircle(False, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1), 4, clGreen);
-    TP := Point(RandomRange(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x - 10, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x + 10), RandomRange(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).y - 30, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y2), 1).y + 30));
+    TP := Point(RandomRange(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x - 5, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x + 20), RandomRange(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y2), 1).y + 5, R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).y - 5));
+    Writeln('Point 1: (' + IntToStr(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).x) + ', ' + IntToStr(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y1), 1).y) + ')');
+    Writeln('Point 2: (' + IntToStr(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y2), 1).x) + ', ' + IntToStr(R_TileToMS(Point(o.TileArea.X1, o.TileArea.Y2), 1).y) + ')');
   end else
   begin
     R_DrawLine(False, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1), R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1), clBlue);
     R_DrawCircle(False, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1), 4, clGreen);
-    TP := Point(RandomRange(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).x - 10, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).x + 10), RandomRange(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).y + 30, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).y - 30));
+    TP := Point(RandomRange(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).x - 20, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).x + 5), RandomRange(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).y + 5, R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).y - 5));
+    Writeln('Point 1: (' + IntToStr(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).x) + ', ' + IntToStr(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y1), 1).y) + ')');
+    Writeln('Point 2: (' + IntToStr(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).x) + ', ' + IntToStr(R_TileToMS(Point(o.TileArea.X2, o.TileArea.Y2), 1).y) + ')');
   end;
 
   R_DrawCircle(False, TP, 3,  clGreen);
-
+  Writeln('Point: ' + ToStr(TP));
   MMouse(TP.x, TP.y, 0, 0);
+  //TerminateScript;
   Wait(400 + Random(200));
   //GetMousePos(TP.x, TP.y);
   if R_IsUpText(UpText) then
@@ -412,8 +416,8 @@ end;
 function R_ToSlime: Boolean;
 Description: [REF] Walks to the slime
 *******************************************************************************}
-function R_ToSlime: Boolean;     // Check pos at any time + solve
-var
+function R_ToSlime: Boolean;     // TODO: Check pos at any time + solve
+var                              //       Integrate Shortcut
   i: Integer;
   t: TIntegerArray;
   b: TBoolArray;
@@ -429,11 +433,17 @@ begin
       Wait(1000);
     Wait(RandomRange(1200, 1500));
     Debug('At Stair', False);
-    R_UseStair2(OBJ_INTERACTABLE, ID_StairDFB, 'own', b[i - 4]);
-    while not R_IsIdle do                                      // #1: (3688, 9888)
-      Wait(1000);                                              // #2: (3675, 9888)
-    while not (R_GetMyPos = Point(t[i - 4], 9888)) do          // #3: (3683, 9888)
-      Wait(1000);
+    if R_UseStair2(OBJ_INTERACTABLE, ID_StairDFB, 'own', b[i - 4]) then
+    begin
+      while not R_IsIdle do                                      // #1: (3688, 9888)
+        Wait(1000);                                              // #2: (3675, 9888)
+      while not (R_GetMyPos = Point(t[i - 4], 9888)) do          // #3: (3683, 9888)
+        Wait(1000);
+    end else
+    begin
+      ClearSmartCanvas;
+      Exit;
+    end;
     ClearSmartCanvas;
   end;
   Result := R_GetMyPos = Point(t[2], 9888);
@@ -488,7 +498,7 @@ begin
     while (R_ItemExists(ID_BucketS, Item)) do
     begin
       Mouse(TP.x, TP.y, 0, 0, True);
-      Wait(RandomRange(500, 800));
+      Wait(RandomRange(300, 700));
     end;
   IncEx(Players[CurrentPlayer].Integers[PLAYER_BONEDONE], 9);
   Result := ((R_CountItem(ID_Bucket) = 9) and (R_CountItem(ID_Pot) = 9));
@@ -502,33 +512,21 @@ function R_CollectTokens: Boolean;
 var
   NPC: TNPC;
   TP: TPoint;
-  Item: TInvItem;
 begin
-  while (not (R_IsIdle)) do
-    Wait(1000);
-  NPC := R_GetNPC(ID_Disciple, False);
-  if NPC = NULL_NPC then
+  while not R_IsUpText('scip') do
   begin
-    Debug('Null NPC in R_CollectTokens', False);
-    Exit;
-  end;
-  Debug('R_CollectTokens: NPC Motion = ' + ToStr(NPC.Motion), False);
-  if NPC.Motion > 1 then
-    while NPC.Motion > 1 do
+    NPC := R_GetNPC(ID_Disciple, False);
+    if NPC = NULL_NPC then
     begin
-      Debug('NPC Moving', False);
-      Wait(1000);
-      NPC := R_GetNPC(ID_Disciple, False);
+      Debug('Null NPC in R_CollectTokens', False);
+      Exit;
     end;
-  TP := R_TileToMS(NPC.Tile, 1);
-  Mouse(TP.x, TP.y, 2, 2, False);
-  Wait(500 + Random(25));
-  R_ChooseOption('ollect');
-  Wait(800 + Random(400));
-  Result := R_ItemExists(ID_Token, Item);
-  if not Result then
-    R_CollectTokens;
-  Wait(700 + Random (300));
+    TP := R_TileToMS(NPC.Tile, 1);
+    MMouse(TP.x, TP.y, 2, 2);
+    GetMousePos(TP.x, TP.y);
+  end;
+  Mouse(TP.x, TP.y, 0, 0, False);
+  Result := R_ChooseOption('ollect');
 end;
 
 {*******************************************************************************
@@ -596,20 +594,19 @@ function R_UseRing: Boolean;
 Description: [REF] Teleports using ring
 *******************************************************************************}
 function R_UseRing: Boolean;
+var
+  Child: TInterfaceChild;
 begin
-  Debug('in', False);
   R_GameTab(RTAB_EQUIPMENT);
   Wait(800 + Random(300));
-  R_ClickInterface(R_GetInterfaceChild(INTERFACE_EQUIPMENT, EQUIPMENT_RING), 2); // Write Own, sometimes clicks outer edge
+
+  Child := R_GetInterfaceChild(INTERFACE_EQUIPMENT, EQUIPMENT_RING);
+  MouseBox(Child.Bounds.X1 + 5, Child.Bounds.Y1 + 5, Child.Bounds.X2 - 5, Child.Bounds.Y2 - 5, 2);
+
   Result := R_WaitOption('elep', 800 + Random(50));
   Wait(2000);
-  Debug('2', false);
   while (not (PointInBox(R_GetMyPos, IntToBox(3431, 3684, 3461, 3714)))) do
-  begin
-    Writeln(R_GetMyPos);
     Wait(1000);
-  end;
-  Debug('3', false);
   while not R_IsIdle do
     Wait(1000);
   Wait(2500 + Random(400));
@@ -642,13 +639,14 @@ begin
     Debug('Ring of Kinship is not equipped', True);
   if (not (R_ItemExists(ID_Ectophial, Item))) then
     Debug('Ectophial is not in Inventory', True);
+
   if (not (R_CountItem(ID_Bucket) = 9)) then
     Debug('Please have 9 buckets in Inventory', True);
   if (not (R_CountItem(ID_Pot) = 9)) then
     if (not (Players[CurrentPlayer].Loc = LOC_FB)) then
-    Debug('Please have 9 pots in Inventory', True);
-  if (not (R_CountItem(GetGroundID(Players[CurrentPlayer].Integers[PLAYER_BONE])) = 9)) then
-    Debug('9 pots of ground bones were not found when collecting slime', True);
+      Debug('Please have 9 pots in Inventory', True)
+    else if (not (R_CountItem(GetGroundID(Players[CurrentPlayer].Integers[PLAYER_BONE])) = 9)) then
+      Debug('9 pots of ground bones were not found when collecting slime', True);
   Result := True;
 end;
 
@@ -741,6 +739,7 @@ begin
   R_MakeCompass('n');
   R_SetRun(True);
   R_DetermineLocation;
+  // Add option to deposit everything, withdraw right equip + go
 end;
 
 {*******************************************************************************
@@ -761,7 +760,7 @@ begin
                      Players[CurrentPlayer].Loc := LOC_FM;
                      Result := True;
                    end;
-    LOC_FM:      if R_ClickTo(PATH_StairUF1) then
+    LOC_FM:      if R_ClickTo(PATH_StairUF1) then // Change this to be either click or mm
                    if R_UseStair(OBJ_INTERACTABLE, ID_StairUF1, 'Up', [Point(3666, 3522), Point(3667, 3522)]) then
                    begin
                      Players[CurrentPlayer].Loc := LOC_F1;
@@ -769,7 +768,7 @@ begin
                    end;
     LOC_F1:      if R_GrindBones(Players[CurrentPlayer].Integers[PLAYER_BONE]) then
                    if R_WalkTo(PATH_StairDF1) then
-                     if R_UseStair(OBJ_INTERACTABLE, ID_StairDF1, 'own', [Point(3666, 3517), Point(3667, 3517)]) then
+                     if R_UseStair(OBJ_INTERACTABLE, ID_StairDF1, 'own', [Point(3666, 3517), Point(3667, 3517)]) then //Always clicks the same place, modify
                        if R_WalkTo(PATH_TrapDoor) then
                          if R_OpenTrapDoor then
                          begin
