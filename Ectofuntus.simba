@@ -169,29 +169,6 @@ begin
 end;
 
 {*******************************************************************************
-function R_LastChatMessage: String;
-Description: [REF] Returns the last chat message
-*******************************************************************************}
-function R_LastChatMessage: String;
-var
-  i: Integer;
-begin
-  if not R_ValidInterface(137) then
-  begin
-    Debug('Invalid Interface in R_LastChatMessage', False);
-    Exit;
-  end;
-  for i := 279 downto 180 do
-  begin
-    Result := R_GetInterfaceText(137, i);
-    if (Result = '') then
-      Continue
-    else
-      Exit;
-  end;
-end;
-
-{*******************************************************************************
 function R_LoadPath(Path: Integer): TPointArray;
 Description: [REF] Loads Reflection Path.
 *******************************************************************************}
@@ -344,7 +321,9 @@ begin
     GetMousePos(TP.x, TP.y);
     if (R_IsUpText('scip') and (TP = R_TileToMS(o.Tile, 1))) then
       Break;
-    Wait(200);
+    if (R_IsUpText(UpText)) then
+      Break;
+    Wait(400);
   end;
 
   Mouse(TP.x, TP.y, 0, 0, False);
@@ -436,14 +415,14 @@ begin
   begin
     R_WalkTo(i);
     R_Flag;
-    while not R_IsIdle do
-      Wait(1000);
-    Wait(RandomRange(1200, 1500));
+   // while not R_IsIdle do
+     // Wait(1000);
+    //Wait(RandomRange(1200, 1500));
     Debug('At Stair', False);
     if R_UseStair2(OBJ_INTERACTABLE, ID_StairDFB, 'own', b[i - 4]) then
     begin
-      while not R_IsIdle do                                      // #1: (3688, 9888)
-        Wait(1000);                                              // #2: (3675, 9888)
+      //while not R_IsIdle do                                      // #1: (3688, 9888)
+        //Wait(1000);                                              // #2: (3675, 9888)
       while not (R_GetMyPos = Point(t[i - 4], 9888)) do          // #3: (3683, 9888)
         Wait(1000);
     end else
@@ -536,6 +515,7 @@ begin
     TP := R_TileToMS(NPC.Tile, 1);
     MMouse(TP.x, TP.y, 2, 2);
     GetMousePos(TP.x, TP.y);
+    Wait(400);
   end;
   Mouse(TP.x, TP.y, 0, 0, False);
   Result := R_WaitOption('ollect', 300 + Random(200));
