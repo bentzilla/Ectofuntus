@@ -124,9 +124,7 @@ const
     LOC_PREBANK     = 'Daemonheim';
     LOC_BANK        = 'Bank';
     LOC_FB          = 'Collecting Slime';
-    LOC_FMA         = 'Main Floor - To Grinder';
-    LOC_FMB         = 'Main Floor - To Slime';
-    LOC_FMC         = 'Main Floor - To Bank';
+    LOC_FM          = 'Main Floor';
     LOC_F1          = 'Grinding';
 
 {*******************************************************************************
@@ -199,9 +197,9 @@ begin
   R_SetRun(True);
   if (R_WalkPath(R_LoadPath(Path))) then
     Result := True;
-  {while not R_IsIdle do
+  while not R_IsIdle do
     Wait(1000);
-  Wait(800 + Random(300));  }
+  Wait(800 + Random(300));
 end;
 
 {*******************************************************************************
@@ -223,9 +221,9 @@ begin
     Result := True;
     Wait(800);
   end;
-  {while not R_IsIdle do
+  while not R_IsIdle do
     Wait(1000);
-  Wait(800 + Random(300)); }
+  Wait(800 + Random(300));
 end;
 
 {*******************************************************************************
@@ -300,7 +298,6 @@ var
   o: TRSObject;
   TP: TPoint;
 begin
-
   o := R_GetObject(ID, ObjType, 20);
   if o = NULL_RSOBJECT then
   begin
@@ -312,27 +309,21 @@ begin
     Debug('Null RSObject in R_UseStair', False);
     Exit;
   end;
-
-  while not R_IsUpText(UpText) do
+  TP := R_TileToMS(o.Tile, 1);
+  MMouse(TP.x, TP.y, 2, 2);
+  GetMousePos(TP.x, TP.y);
+  if R_IsUpText(UpText) then
   begin
-    TP := R_TileToMS(o.Tile, 1);
-    if (not (PointInBox(TP, IntToBox(-1, -1, 50, 50)))) then
-      MMouse(TP.x, TP.y, 2, 2);
-    GetMousePos(TP.x, TP.y);
-    if (R_IsUpText('scip') and (TP = R_TileToMS(o.Tile, 1))) then
-      Break;
-    if (R_IsUpText(UpText)) then
-      Break;
-    Wait(400);
+    Mouse(TP.x, TP.y, 0, 0, True);
+    Result := True;
+  end else
+  if R_IsUpText('ciple') then
+  begin
+    Mouse(TP.x, TP.y, 0, 0, False);
+    Result := R_ChooseOption(UpText);
   end;
-
-  Mouse(TP.x, TP.y, 0, 0, False);
-  Result := R_WaitOption(UpText, 300 + Random(40));
-
-
-  if ((ExpectedTiles = NULL_TILEARRAY) or (not (Result))) then
+  if ExpectedTiles = NULL_TILEARRAY then
     Exit;
-
   while (not (R_OnExpectedTile(ExpectedTiles))) do
     Wait(1000);
   while (not (R_IsIdle)) do
@@ -415,14 +406,14 @@ begin
   begin
     R_WalkTo(i);
     R_Flag;
-   // while not R_IsIdle do
-     // Wait(1000);
-    //Wait(RandomRange(1200, 1500));
+    while not R_IsIdle do
+      Wait(1000);
+    Wait(RandomRange(1200, 1500));
     Debug('At Stair', False);
     if R_UseStair2(OBJ_INTERACTABLE, ID_StairDFB, 'own', b[i - 4]) then
     begin
-      //while not R_IsIdle do                                      // #1: (3688, 9888)
-        //Wait(1000);                                              // #2: (3675, 9888)
+      while not R_IsIdle do                                      // #1: (3688, 9888)
+        Wait(1000);                                              // #2: (3675, 9888)
       while not (R_GetMyPos = Point(t[i - 4], 9888)) do          // #3: (3683, 9888)
         Wait(1000);
     end else
@@ -477,20 +468,15 @@ begin
     Debug('Null RSObject in R_Worship', False);
     Exit;
   end;
-
-  while not R_IsUpText('orship') do
-  begin
-    TP := R_TileToMS(o.Tile, 1);
-    MMouse(TP.x, TP.y, 2, 2);
-    GetMousePos(TP.x, TP.y);
-  end;
-
-  while (R_ItemExists(ID_BucketS, Item)) do
-  begin
-    Mouse(TP.x, TP.y, 0, 0, True);
-    Wait(RandomRange(300, 700));
-  end;
-
+  TP := R_TileToMS(o.Tile, 1);
+  MMouse(TP.x, TP.y, 2, 2);
+  GetMousePos(TP.x, TP.y);
+  if R_IsUpText('orship') then
+    while (R_ItemExists(ID_BucketS, Item)) do
+    begin
+      Mouse(TP.x, TP.y, 0, 0, True);
+      Wait(RandomRange(300, 700));
+    end;
   IncEx(Players[CurrentPlayer].Integers[PLAYER_BONEDONE], 9);
   Result := ((R_CountItem(ID_Bucket) = 9) and (R_CountItem(ID_Pot) = 9));
 end;
@@ -515,10 +501,9 @@ begin
     TP := R_TileToMS(NPC.Tile, 1);
     MMouse(TP.x, TP.y, 2, 2);
     GetMousePos(TP.x, TP.y);
-    Wait(400);
   end;
   Mouse(TP.x, TP.y, 0, 0, False);
-  Result := R_WaitOption('ollect', 300 + Random(200));
+  Result := R_ChooseOption('ollect');
 end;
 
 {*******************************************************************************
@@ -536,16 +521,10 @@ begin
     Debug('Null NPC in R_BankFrem', False);
     Exit;
   end;
-
-  while not R_IsUpText('Frem') do
-  begin
-    TP := R_TileToMS(NPC.Tile, 1);
-    MMouse(TP.x, TP.y, 2, 2);
-    GetMousePos(TP.x, TP.y);
-  end;
-
-  Mouse(TP.x, TP.y, 0, 0, False);
-  if R_WaitOption('Bank Frem', 300 + Random(200)) then
+  TP := R_TileToMS(NPC.Tile, 1);
+  Mouse(TP.x, TP.y, 2, 2, False);
+  Wait(500 + Random(25));
+  if R_ChooseOption('Bank Frem') then
     while (not ((R_BankScreen) or (R_PinScreen))) do
       Wait(500 + Random(400))
   else
@@ -641,7 +620,7 @@ begin
   if (not (R_CountItem(ID_Bucket) = 9)) then
     Debug('Please have 9 buckets in Inventory', True);
   if (not (R_CountItem(ID_Pot) = 9)) then
-    if (not ((Players[CurrentPlayer].Loc = LOC_FB) or (Players[CurrentPlayer].Loc = LOC_FMB))) then
+    if (not (Players[CurrentPlayer].Loc = LOC_FB)) then
       Debug('Please have 9 pots in Inventory', True)
     else if (not (R_CountItem(GetGroundID(Players[CurrentPlayer].Integers[PLAYER_BONE])) = 9)) then
       Debug('9 pots of ground bones were not found when collecting slime', True);
@@ -703,7 +682,6 @@ Description: [Ref] Determines current players location and loads it into Loc
 procedure R_DetermineLocation;
 var
   MyPos: TTile;
-  Item: TInvItem;
 begin
   MyPos := R_GetMyPos;
 
@@ -715,12 +693,7 @@ begin
 
   if PointInBox(MyPos, IntToBox(3651, 3511, 3668, 3530)) then
     if (not (R_GetObject(ID_Ecto, OBJ_INTERACTABLE, 30) = NULL_RSOBJECT)) then
-      if (R_ItemExists(ID_Token, Item)) then
-        Players[CurrentPlayer].Loc := LOC_FMC
-      else if (R_ItemExists(GetGroundID(Players[CurrentPlayer].Integers[PLAYER_BONE]), Item)) then
-        Players[CurrentPlayer].Loc := LOC_FMB
-      else
-        Players[CurrentPlayer].Loc := LOC_FMA
+      Players[CurrentPlayer].Loc := LOC_FM
     else if (not (R_GetObject(ID_Grinder, OBJ_INTERACTABLE, 30) = NULL_RSOBJECT)) then
       Players[CurrentPlayer].Loc := LOC_F1;
 
@@ -761,41 +734,33 @@ begin
     LOC_BANK:    if R_UseBankFrem(Players[CurrentPlayer].Integers[PLAYER_BONE]) then
                    if R_UseEctophial then
                    begin
-                     Players[CurrentPlayer].Loc := LOC_FMA;
+                     Players[CurrentPlayer].Loc := LOC_FM;
                      Result := True;
                    end;
-    LOC_FMA:     if R_ClickTo(PATH_StairUF1) then // Change this to be either click or mm
+    LOC_FM:      if R_ClickTo(PATH_StairUF1) then // Change this to be either click or mm
                    if R_UseStair(OBJ_INTERACTABLE, ID_StairUF1, 'Up', [Point(3666, 3522), Point(3667, 3522)]) then
                    begin
                      Players[CurrentPlayer].Loc := LOC_F1;
                      Result := True;
                    end;
-    LOC_FMB:     if R_WalkTo(PATH_TrapDoor) then
-                   if R_OpenTrapDoor then
-                   begin
-                     Players[CurrentPlayer].Loc := LOC_FB;
-                     Result := True;
-                   end;
-    LOC_FMC:     if R_UseRing then
-                 begin
-                   Players[CurrentPlayer].Loc := LOC_PREBANK;
-                   Result := True;
-                 end;
     LOC_F1:      if R_GrindBones(Players[CurrentPlayer].Integers[PLAYER_BONE]) then
                    if R_WalkTo(PATH_StairDF1) then
                      if R_UseStair(OBJ_INTERACTABLE, ID_StairDF1, 'own', [Point(3666, 3517), Point(3667, 3517)]) then //Always clicks the same place, modify
-                     begin
-                       Players[CurrentPlayer].Loc := LOC_FMB;
-                       Result := True;
-                     end;
+                       if R_WalkTo(PATH_TrapDoor) then
+                         if R_OpenTrapDoor then
+                         begin
+                           Players[CurrentPlayer].Loc := LOC_FB;
+                           Result := True;
+                         end;
     LOC_FB:      if R_ToSlime then
                    if R_GetSlime then
                      if R_UseEctophial then
                        if R_Worship then
                          if R_WalkTo(PATH_Token) then
                            if R_CollectTokens then
+                             if R_UseRing then
                              begin
-                               Players[CurrentPlayer].Loc := LOC_FMC;
+                               Players[CurrentPlayer].Loc := LOC_PREBANK;
                                Result := True;
                              end;
   end;
@@ -812,16 +777,16 @@ begin
   repeat
     if not EctoLoop then
     begin
-      //NextPlayer(False);
+      NextPlayer(False);
       Exit;
     end;
   until(Players[CurrentPlayer].Integers[PLAYER_BONEDONE] >= Players[CurrentPlayer].Integers[PLAYER_BONETODO]);
   Report;
-  //NextPlayer(False);
+  NextPlayer(False);
 end;
 
 begin
-  //AddOnTerminate('ScriptTerminate');
+  AddOnTerminate('ScriptTerminate');
   SetupSmart;
   SetupSRL;
   R_UpdateHooks;
